@@ -321,6 +321,20 @@ class CropRecommendations:
                 "humidity_range": (65, 80),
                 "water_needs": "moderate",
                 "sensitive_stages": ["flowering", "fruiting"]
+            },
+            "Marigold": {
+                "temp_range": (18, 30),
+                "optimal_temp": (20, 25),
+                "humidity_range": (60, 75),
+                "water_needs": "moderate",
+                "sensitive_stages": ["flowering"]
+            },
+            "Rose": {
+                "temp_range": (15, 28),
+                "optimal_temp": (18, 24),
+                "humidity_range": (65, 80),
+                "water_needs": "high",
+                "sensitive_stages": ["flowering"]
             }
         }
     

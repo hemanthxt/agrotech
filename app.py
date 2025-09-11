@@ -36,9 +36,12 @@ st.markdown("Complete farming solution with weather monitoring and price predict
 # Sidebar for location input (shared across all tabs)
 st.sidebar.header("Farm Location")
 
-# Get current location button
-if st.sidebar.button("📍 Use My Current Location", help="Automatically detect your current location"):
-    with st.spinner("Detecting your current location..."):
+# Enhanced current location detection
+st.sidebar.subheader("📍 Location Settings")
+
+# Get current location button with better styling
+if st.sidebar.button("🌍 Detect My Current Location", help="Automatically detect your current location using IP geolocation", type="primary"):
+    with st.spinner("🔍 Detecting your current location..."):
         try:
             # Use IP-based geolocation to detect current location
             response = requests.get("https://ipapi.co/json/", timeout=10)
@@ -53,16 +56,22 @@ if st.sidebar.button("📍 Use My Current Location", help="Automatically detect 
                 # Update session state with current location
                 st.session_state.current_latitude = current_lat
                 st.session_state.current_longitude = current_lon
-                st.session_state.current_location_name = f"{current_city}, {current_region}, {current_country}" if current_city else "Your Location"
+                if current_city and current_region:
+                    st.session_state.current_location_name = f"{current_city}, {current_region}, {current_country}"
+                elif current_city:
+                    st.session_state.current_location_name = f"{current_city}, {current_country}"
+                else:
+                    st.session_state.current_location_name = f"{current_country}" if current_country else "Your Location"
                 st.session_state.detected_location = st.session_state.current_location_name
                 
-                st.sidebar.success(f"📍 Location detected: {st.session_state.current_location_name}")
+                st.sidebar.success(f"✅ Location detected successfully!")
+                st.sidebar.info(f"📍 **{st.session_state.current_location_name}**\n🗺️ {current_lat:.4f}°, {current_lon:.4f}°")
                 st.rerun()
             else:
-                st.sidebar.error("Could not detect location. Please enter coordinates manually.")
+                st.sidebar.error("❌ Could not detect location. Please enter coordinates manually.")
         except Exception as e:
-            st.sidebar.error(f"Location detection failed: {str(e)}")
-            st.sidebar.info("Please enter your coordinates manually.")
+            st.sidebar.error(f"❌ Location detection failed: {str(e)}")
+            st.sidebar.info("💡 Please enter your coordinates manually below.")
 
 # Use detected location or default values
 default_lat = st.session_state.get('current_latitude', 40.7128)
@@ -108,11 +117,29 @@ if auto_detect_location:
                 st.session_state.detected_location = detected_name
                 location_name = detected_name
 
-# Crop selection
+# Crop selection with categories
 st.sidebar.header("Crop Information")
+
+# Define crop categories
+crop_categories = {
+    "🌾 Grains & Cereals": ["Wheat", "Corn", "Rice", "Soybeans"],
+    "🍎 Fruits": ["Apple", "Mango", "Orange", "Grapes", "Banana", "Coconut"],
+    "🥕 Vegetables": ["Tomatoes", "Potatoes", "Lettuce", "Carrots", "Onions", "Cucumbers", "Peppers", "Spinach", "Broccoli", "Cabbage", "Beans", "Peas", "Squash", "Eggplant", "Radishes", "Cauliflower", "Okra", "Beetroot", "Turnip"],
+    "🌸 Flowers": ["Sunflower", "Marigold", "Rose"],
+    "🌿 Herbs & Spices": ["Ginger", "Garlic", "Coriander", "Mint", "Fenugreek", "Mustard", "Green Chili", "Turmeric"],
+    "🏭 Cash Crops": ["Cotton", "Sugarcane", "Groundnut", "Sesame", "Safflower", "Castor", "Cashew"]
+}
+
+# Create category selection
+selected_category = st.sidebar.selectbox(
+    "Select crop category",
+    list(crop_categories.keys())
+)
+
+# Create crop selection based on category
 crop_type = st.sidebar.selectbox(
     "Select your crop",
-    ["Wheat", "Corn", "Rice", "Soybeans", "Tomatoes", "Potatoes", "Cotton", "Lettuce", "Carrots", "Onions", "Cucumbers", "Peppers", "Spinach", "Broccoli", "Cabbage", "Beans", "Peas", "Squash", "Eggplant", "Radishes"]
+    crop_categories[selected_category]
 )
 
 # Growth stage
@@ -317,7 +344,7 @@ with tab2:
         with col1:
             st.metric(
                 f"💰 Current {crop_type} Price",
-                f"${current_price['current']:.2f}",
+                f"₹{current_price['current']:.2f}/kg",
                 f"{current_price['change']:+.1f}%",
                 delta_color="normal"
             )
@@ -405,7 +432,7 @@ with tab2:
         st.markdown("### Selling Strategy Details:")
         st.write(f"🎯 **Optimal selling date:** {selling_advice['optimal_date']}")
         st.write(f"📅 **Days to wait:** {selling_advice['days_to_wait']} days")
-        st.write(f"💰 **Expected price:** ${selling_advice['expected_price']:.2f}")
+        st.write(f"💰 **Expected price:** ₹{selling_advice['expected_price']:.2f}/kg")
         st.write(f"📊 **Potential gain:** {selling_advice['potential_gain_percent']:+.1f}%")
 
 # Auto-refresh functionality

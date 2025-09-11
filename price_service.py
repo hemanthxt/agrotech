@@ -16,7 +16,7 @@ class PriceService:
         # Crop to commodity mapping
         self.crop_commodity_map = {
             "Wheat": "wheat",
-            "Corn": "corn",
+            "Corn": "corn", 
             "Rice": "rice",
             "Soybeans": "soybeans",
             "Cotton": "cotton",
@@ -59,7 +59,9 @@ class PriceService:
             "Sesame": "sesame",
             "Sunflower": "sunflower",
             "Safflower": "safflower",
-            "Castor": "castor"
+            "Castor": "castor",
+            "Marigold": "marigold",
+            "Rose": "rose"
         }
         
         # Mock historical data for demonstration (in real implementation, this would come from APIs)
@@ -109,7 +111,9 @@ class PriceService:
             "sesame": {"current": 142.7, "unit": "INR/kg", "change": 2.9},
             "sunflower": {"current": 78.3, "unit": "INR/kg", "change": 1.8},
             "safflower": {"current": 89.2, "unit": "INR/kg", "change": 2.6},
-            "castor": {"current": 67.4, "unit": "INR/kg", "change": 1.4}
+            "castor": {"current": 67.4, "unit": "INR/kg", "change": 1.4},
+            "marigold": {"current": 45.8, "unit": "INR/kg", "change": 3.2},
+            "rose": {"current": 120.5, "unit": "INR/kg", "change": 2.8}
         }
     
     @st.cache_data(ttl=1800)  # Cache for 30 minutes
@@ -249,7 +253,7 @@ class PriceService:
         return {
             "status": "success",
             "current_price": current_price['current'],
-            "currency": "USD/ton",
+            "currency": "INR/kg",
             "change_percent": current_price['change'],
             "vs_30day_avg": current_vs_avg,
             "volatility": volatility,
