@@ -169,14 +169,54 @@ location_name = st.session_state.selected_location_name
 # Crop selection with categories
 st.sidebar.header("Crop Information")
 
-# Define crop categories
+# Define crop categories with expanded selections
 crop_categories = {
-    "🌾 Grains & Cereals": ["Wheat", "Corn", "Rice", "Soybeans"],
-    "🍎 Fruits": ["Apple", "Mango", "Orange", "Grapes", "Banana", "Coconut"],
-    "🥕 Vegetables": ["Tomatoes", "Potatoes", "Lettuce", "Carrots", "Onions", "Cucumbers", "Peppers", "Spinach", "Broccoli", "Cabbage", "Beans", "Peas", "Squash", "Eggplant", "Radishes", "Cauliflower", "Okra", "Beetroot", "Turnip"],
-    "🌸 Flowers": ["Sunflower", "Marigold", "Rose"],
-    "🌿 Herbs & Spices": ["Ginger", "Garlic", "Coriander", "Mint", "Fenugreek", "Mustard", "Green Chili", "Turmeric"],
-    "🏭 Cash Crops": ["Cotton", "Sugarcane", "Groundnut", "Sesame", "Safflower", "Castor", "Cashew"]
+    "🌾 Grains & Cereals": [
+        "Wheat", "Corn", "Rice", "Soybeans", "Barley", "Oats", "Millet", "Sorghum", 
+        "Quinoa", "Rye", "Buckwheat", "Amaranth", "Pearl Millet", "Finger Millet", 
+        "Foxtail Millet", "Proso Millet", "Triticale", "Teff"
+    ],
+    "🍎 Fruits": [
+        "Apple", "Mango", "Orange", "Grapes", "Banana", "Coconut", "Pineapple", 
+        "Papaya", "Guava", "Pomegranate", "Watermelon", "Muskmelon", "Lemon", 
+        "Lime", "Grapefruit", "Avocado", "Kiwi", "Dragon Fruit", "Passion Fruit", 
+        "Fig", "Date Palm", "Jackfruit", "Litchi", "Rambutan", "Custard Apple", 
+        "Strawberry", "Blueberry", "Blackberry", "Raspberry", "Gooseberry", 
+        "Cherry", "Plum", "Peach", "Apricot", "Pear"
+    ],
+    "🥕 Vegetables": [
+        "Tomatoes", "Potatoes", "Lettuce", "Carrots", "Onions", "Cucumbers", "Peppers", 
+        "Spinach", "Broccoli", "Cabbage", "Beans", "Peas", "Squash", "Eggplant", 
+        "Radishes", "Cauliflower", "Okra", "Beetroot", "Turnip", "Sweet Potato", 
+        "Pumpkin", "Zucchini", "Bell Pepper", "Hot Pepper", "Kale", "Brussels Sprouts", 
+        "Asparagus", "Artichoke", "Celery", "Leek", "Fennel", "Chard", "Arugula", 
+        "Bok Choy", "Watercress", "Collard Greens", "Mustard Greens", "Bitter Gourd", 
+        "Bottle Gourd", "Ridge Gourd", "Snake Gourd", "Ash Gourd", "Ivy Gourd", 
+        "Pointed Gourd", "Drumstick", "Cluster Beans", "French Beans", "Broad Beans"
+    ],
+    "🌸 Flowers": [
+        "Sunflower", "Marigold", "Rose", "Jasmine", "Chrysanthemum", "Dahlia", 
+        "Carnation", "Gladiolus", "Tuberose", "Lily", "Lotus", "Hibiscus", 
+        "Ixora", "Bougainvillea", "Petunia", "Zinnia", "Cosmos", "Salvia", 
+        "Celosia", "Anthurium", "Orchid", "Bird of Paradise", "Heliconia", 
+        "Gerbera", "Lavender", "Calendula", "Nasturtium", "Pansy", "Viola"
+    ],
+    "🌿 Herbs & Spices": [
+        "Ginger", "Garlic", "Coriander", "Mint", "Fenugreek", "Mustard", 
+        "Green Chili", "Turmeric", "Cumin", "Cardamom", "Cinnamon", "Clove", 
+        "Black Pepper", "Nutmeg", "Mace", "Star Anise", "Bay Leaf", "Curry Leaf", 
+        "Holy Basil", "Sweet Basil", "Oregano", "Thyme", "Rosemary", "Sage", 
+        "Parsley", "Cilantro", "Dill", "Chives", "Tarragon", "Marjoram", 
+        "Fennel Seeds", "Carom Seeds", "Nigella Seeds", "Poppy Seeds", "Sesame Seeds",
+        "Vanilla", "Saffron", "Asafoetida", "Dried Red Chili"
+    ],
+    "🏭 Cash Crops": [
+        "Cotton", "Sugarcane", "Groundnut", "Sesame", "Safflower", "Castor", 
+        "Cashew", "Tobacco", "Coffee", "Tea", "Rubber", "Coconut Palm", "Oil Palm", 
+        "Jute", "Hemp", "Flax", "Ramie", "Sisal", "Cocoa", "Black Pepper Vine", 
+        "Betel Nut", "Cardamom", "Cinnamon Tree", "Clove Tree", "Nutmeg Tree",
+        "Indigo", "Henna", "Aloe Vera", "Stevia", "Moringa"
+    ]
 }
 
 # Create category selection
