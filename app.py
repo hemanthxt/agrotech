@@ -183,117 +183,117 @@ with tab1:
                     delta=None
                 )
         
-        # Weather alerts
-        alerts = weather_service.check_weather_alerts(current_weather, daily_forecast[0])
-        if alerts:
-            st.header("⚠️ Weather Alerts")
-            for alert in alerts:
-                if alert['severity'] == 'warning':
-                    st.warning(f"**{alert['type']}**: {alert['message']}")
-                elif alert['severity'] == 'error':
-                    st.error(f"**{alert['type']}**: {alert['message']}")
+            # Weather alerts
+            alerts = weather_service.check_weather_alerts(current_weather, daily_forecast[0])
+            if alerts:
+                st.header("⚠️ Weather Alerts")
+                for alert in alerts:
+                    if alert['severity'] == 'warning':
+                        st.warning(f"**{alert['type']}**: {alert['message']}")
+                    elif alert['severity'] == 'error':
+                        st.error(f"**{alert['type']}**: {alert['message']}")
+                    else:
+                        st.info(f"**{alert['type']}**: {alert['message']}")
+            
+            # Crop recommendations
+            st.header(f"🌱 Recommendations for {crop_type} ({growth_stage})")
+            recommendations = crop_recommendations.get_recommendations(
+                crop_type, growth_stage, current_weather, daily_forecast[0]
+            )
+            
+            rec_col1, rec_col2 = st.columns(2)
+            
+            with rec_col1:
+                st.subheader("🚿 Irrigation")
+                if recommendations['irrigation']['needed']:
+                    st.success(f"✅ {recommendations['irrigation']['message']}")
                 else:
-                    st.info(f"**{alert['type']}**: {alert['message']}")
-        
-        # Crop recommendations
-        st.header(f"🌱 Recommendations for {crop_type} ({growth_stage})")
-        recommendations = crop_recommendations.get_recommendations(
-            crop_type, growth_stage, current_weather, daily_forecast[0]
-        )
-        
-        rec_col1, rec_col2 = st.columns(2)
-        
-        with rec_col1:
-            st.subheader("🚿 Irrigation")
-            if recommendations['irrigation']['needed']:
-                st.success(f"✅ {recommendations['irrigation']['message']}")
-            else:
-                st.info(f"ℹ️ {recommendations['irrigation']['message']}")
+                    st.info(f"ℹ️ {recommendations['irrigation']['message']}")
+                
+                st.subheader("🌾 Field Activities")
+                for activity in recommendations['activities']:
+                    if activity['recommended']:
+                        st.success(f"✅ {activity['activity']}: {activity['reason']}")
+                    else:
+                        st.warning(f"⚠️ Avoid {activity['activity']}: {activity['reason']}")
             
-            st.subheader("🌾 Field Activities")
-            for activity in recommendations['activities']:
-                if activity['recommended']:
-                    st.success(f"✅ {activity['activity']}: {activity['reason']}")
-                else:
-                    st.warning(f"⚠️ Avoid {activity['activity']}: {activity['reason']}")
-        
-        with rec_col2:
-            st.subheader("🛡️ Disease Risk")
-            risk_color = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}
-            st.markdown(f"{risk_color[recommendations['disease_risk']['level']]} **{recommendations['disease_risk']['level']} Risk**")
-            st.write(recommendations['disease_risk']['message'])
+            with rec_col2:
+                st.subheader("🛡️ Disease Risk")
+                risk_color = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}
+                st.markdown(f"{risk_color[recommendations['disease_risk']['level']]} **{recommendations['disease_risk']['level']} Risk**")
+                st.write(recommendations['disease_risk']['message'])
+                
+                st.subheader("📝 General Advice")
+                for advice in recommendations['general_advice']:
+                    st.info(advice)
             
-            st.subheader("📝 General Advice")
-            for advice in recommendations['general_advice']:
-                st.info(advice)
-        
-        # Charts section
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Temperature trend
-            st.subheader("📈 24-Hour Temperature Trend")
-            temp_df = pd.DataFrame({
-                'Time': [datetime.fromisoformat(h['time'].replace('Z', '+00:00')) for h in hourly_forecast],
-                'Temperature': [h['temperature'] for h in hourly_forecast]
-            })
+            # Charts section
+            col1, col2 = st.columns(2)
             
-            fig_temp = px.line(temp_df, x='Time', y='Temperature', 
-                              title='Temperature (°C)',
-                              line_shape='spline')
-            fig_temp.update_layout(height=300)
-            st.plotly_chart(fig_temp, width="stretch")
-        
-        with col2:
-            # Precipitation forecast
-            st.subheader("🌧️ 24-Hour Precipitation Forecast")
-            precip_df = pd.DataFrame({
-                'Time': [datetime.fromisoformat(h['time'].replace('Z', '+00:00')) for h in hourly_forecast],
-                'Precipitation': [h['precipitation'] for h in hourly_forecast]
-            })
+            with col1:
+                # Temperature trend
+                st.subheader("📈 24-Hour Temperature Trend")
+                temp_df = pd.DataFrame({
+                    'Time': [datetime.fromisoformat(h['time'].replace('Z', '+00:00')) for h in hourly_forecast],
+                    'Temperature': [h['temperature'] for h in hourly_forecast]
+                })
+                
+                fig_temp = px.line(temp_df, x='Time', y='Temperature', 
+                                  title='Temperature (°C)',
+                                  line_shape='spline')
+                fig_temp.update_layout(height=300)
+                st.plotly_chart(fig_temp, width="stretch")
             
-            fig_precip = px.bar(precip_df, x='Time', y='Precipitation',
-                               title='Precipitation (mm)',
-                               color='Precipitation',
-                               color_continuous_scale='Blues')
-            fig_precip.update_layout(height=300)
-            st.plotly_chart(fig_precip, width="stretch")
+            with col2:
+                # Precipitation forecast
+                st.subheader("🌧️ 24-Hour Precipitation Forecast")
+                precip_df = pd.DataFrame({
+                    'Time': [datetime.fromisoformat(h['time'].replace('Z', '+00:00')) for h in hourly_forecast],
+                    'Precipitation': [h['precipitation'] for h in hourly_forecast]
+                })
+                
+                fig_precip = px.bar(precip_df, x='Time', y='Precipitation',
+                                   title='Precipitation (mm)',
+                                   color='Precipitation',
+                                   color_continuous_scale='Blues')
+                fig_precip.update_layout(height=300)
+                st.plotly_chart(fig_precip, width="stretch")
+            
+            # 7-day forecast
+            st.header("📅 7-Day Forecast")
+            forecast_data = []
+            for day in daily_forecast:
+                date = datetime.fromisoformat(day['date'])
+                forecast_data.append({
+                    'Date': date.strftime('%m/%d'),
+                    'Day': date.strftime('%A'),
+                    'High': f"{day['temp_max']:.0f}°C",
+                    'Low': f"{day['temp_min']:.0f}°C",
+                    'Precipitation': f"{day['precipitation']:.1f}mm",
+                    'Humidity': f"{day['humidity']:.0f}%",
+                    'Wind': f"{day['wind_speed']:.0f} km/h"
+                })
+            
+            forecast_df = pd.DataFrame(forecast_data)
+            st.dataframe(forecast_df, width="stretch", hide_index=True)
+            
+            # Growing conditions summary
+            st.header("🌱 Growing Conditions Summary")
+            conditions = crop_recommendations.analyze_growing_conditions(crop_type, current_weather, daily_forecast)
+            
+            condition_col1, condition_col2, condition_col3 = st.columns(3)
+            
+            with condition_col1:
+                st.metric("Overall Conditions", conditions['overall'], conditions['overall_trend'])
+            
+            with condition_col2:
+                st.metric("Temperature Suitability", conditions['temperature'])
+            
+            with condition_col3:
+                st.metric("Moisture Levels", conditions['moisture'])
         
-        # 7-day forecast
-        st.header("📅 7-Day Forecast")
-        forecast_data = []
-        for day in daily_forecast:
-            date = datetime.fromisoformat(day['date'])
-            forecast_data.append({
-                'Date': date.strftime('%m/%d'),
-                'Day': date.strftime('%A'),
-                'High': f"{day['temp_max']:.0f}°C",
-                'Low': f"{day['temp_min']:.0f}°C",
-                'Precipitation': f"{day['precipitation']:.1f}mm",
-                'Humidity': f"{day['humidity']:.0f}%",
-                'Wind': f"{day['wind_speed']:.0f} km/h"
-            })
-        
-        forecast_df = pd.DataFrame(forecast_data)
-        st.dataframe(forecast_df, width="stretch", hide_index=True)
-        
-        # Growing conditions summary
-        st.header("🌱 Growing Conditions Summary")
-        conditions = crop_recommendations.analyze_growing_conditions(crop_type, current_weather, daily_forecast)
-        
-        condition_col1, condition_col2, condition_col3 = st.columns(3)
-        
-        with condition_col1:
-            st.metric("Overall Conditions", conditions['overall'], conditions['overall_trend'])
-        
-        with condition_col2:
-            st.metric("Temperature Suitability", conditions['temperature'])
-        
-        with condition_col3:
-            st.metric("Moisture Levels", conditions['moisture'])
-    
-    else:
-        st.error("Failed to fetch weather data. Please check your internet connection and try again.")
+        else:
+            st.error("Failed to fetch weather data. Please check your internet connection and try again.")
     
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
