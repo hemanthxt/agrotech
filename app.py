@@ -5,6 +5,7 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import time
 import requests
+import numpy as np
 
 from weather_service import WeatherService
 from crop_recommendations import CropRecommendations
@@ -451,40 +452,218 @@ with tab2:
                     None
                 )
     
-    # Price charts
+    # Enhanced Price Analysis Dashboard
+    st.markdown("---")
+    st.subheader("📊 Price Analysis Dashboard")
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📈 Price History (30 Days)")
+        st.markdown("#### 📈 Historical Price Trend (30 Days)")
         historical_data = price_service.generate_historical_data(crop_type, 30)
         if historical_data is not None:
-            fig_history = px.line(
-                historical_data, 
-                x='Date', 
-                y='Price',
-                title=f'{crop_type} Price History',
-                line_shape='spline'
+            # Create enhanced historical price chart
+            fig_history = go.Figure()
+            
+            # Add main price line
+            fig_history.add_trace(go.Scatter(
+                x=historical_data['Date'],
+                y=historical_data['Price'],
+                mode='lines+markers',
+                name=f'{crop_type} Price',
+                line=dict(color='#2E86AB', width=3),
+                marker=dict(size=4, color='#2E86AB'),
+                hovertemplate='<b>%{x|%d %b %Y}</b><br>Price: ₹<b>%{y:.2f}</b>/kg<extra></extra>'
+            ))
+            
+            # Add trend line
+            if len(historical_data) > 1:
+                z = np.polyfit(range(len(historical_data)), historical_data['Price'], 1)
+                p = np.poly1d(z)
+                trend_line = p(range(len(historical_data)))
+                
+                fig_history.add_trace(go.Scatter(
+                    x=historical_data['Date'],
+                    y=trend_line,
+                    mode='lines',
+                    name='Trend Line',
+                    line=dict(color='#E74C3C', width=2, dash='dash'),
+                    hovertemplate='Trend: ₹<b>%{y:.2f}</b>/kg<extra></extra>'
+                ))
+            
+            # Enhanced layout
+            fig_history.update_layout(
+                title=dict(
+                    text=f'<b>{crop_type} - 30 Day Price History</b>',
+                    font=dict(size=16, color='#2C3E50'),
+                    x=0.5
+                ),
+                xaxis=dict(
+                    title='<b>Date</b>',
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor='rgba(128,128,128,0.2)',
+                    tickformat='%d %b',
+                    tickfont=dict(size=11)
+                ),
+                yaxis=dict(
+                    title='<b>Price (₹/kg)</b>',
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor='rgba(128,128,128,0.2)',
+                    tickformat='.2f',
+                    tickfont=dict(size=11)
+                ),
+                height=400,
+                showlegend=True,
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="center",
+                    x=0.5,
+                    bgcolor="rgba(255,255,255,0.8)"
+                ),
+                plot_bgcolor='rgba(248,249,250,0.8)',
+                paper_bgcolor='white',
+                margin=dict(t=80, l=60, r=40, b=60),
+                font=dict(family="Arial, sans-serif")
             )
-            fig_history.update_layout(height=300)
-            st.plotly_chart(fig_history, width="stretch")
+            
+            st.plotly_chart(fig_history, use_container_width=True)
+            
+            # Price statistics in a nice format
+            avg_price = historical_data['Price'].mean()
+            max_price = historical_data['Price'].max()
+            min_price = historical_data['Price'].min()
+            volatility = historical_data['Price'].std()
+            
+            st.markdown("**📊 Price Statistics:**")
+            col_stats1, col_stats2, col_stats3, col_stats4 = st.columns(4)
+            with col_stats1:
+                st.metric("📊 Average", f"₹{avg_price:.2f}", help="30-day average price")
+            with col_stats2:
+                st.metric("📈 Peak", f"₹{max_price:.2f}", help="Highest price in 30 days")
+            with col_stats3:
+                st.metric("📉 Low", f"₹{min_price:.2f}", help="Lowest price in 30 days")
+            with col_stats4:
+                st.metric("🌊 Volatility", f"₹{volatility:.2f}", help="Price standard deviation")
         else:
-            st.info("Historical data not available")
+            st.info("📊 Historical price data is not available for this crop")
     
     with col2:
-        st.subheader("🔮 Price Forecast (7 Days)")
+        st.markdown("#### 🔮 Price Forecast (Next 7 Days)")
         predictions = price_service.predict_future_prices(crop_type, 7)
         if predictions is not None:
-            fig_forecast = px.line(
-                predictions, 
-                x='Date', 
-                y='Predicted_Price',
-                title=f'{crop_type} Price Forecast',
-                line_shape='spline'
+            # Create enhanced forecast chart
+            fig_forecast = go.Figure()
+            
+            # Add current price marker
+            if current_price:
+                fig_forecast.add_trace(go.Scatter(
+                    x=[datetime.now()],
+                    y=[current_price['current']],
+                    mode='markers',
+                    name='Current Price',
+                    marker=dict(size=15, color='#27AE60', symbol='circle', line=dict(width=2, color='white')),
+                    hovertemplate='<b>Current Price</b><br>₹<b>%{y:.2f}</b>/kg<extra></extra>'
+                ))
+            
+            # Add forecast line with markers
+            fig_forecast.add_trace(go.Scatter(
+                x=predictions['Date'],
+                y=predictions['Predicted_Price'],
+                mode='lines+markers',
+                name='Price Forecast',
+                line=dict(color='#F39C12', width=3),
+                marker=dict(size=6, color='#F39C12'),
+                hovertemplate='<b>%{x|%d %b}</b><br>Predicted: ₹<b>%{y:.2f}</b>/kg<extra></extra>'
+            ))
+            
+            # Add confidence interval
+            upper_bound = predictions['Predicted_Price'] * 1.08
+            lower_bound = predictions['Predicted_Price'] * 0.92
+            
+            fig_forecast.add_trace(go.Scatter(
+                x=predictions['Date'],
+                y=upper_bound,
+                mode='lines',
+                line=dict(width=0),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
+            
+            fig_forecast.add_trace(go.Scatter(
+                x=predictions['Date'],
+                y=lower_bound,
+                mode='lines',
+                line=dict(width=0),
+                fill='tonexty',
+                fillcolor='rgba(243, 156, 18, 0.2)',
+                name='Confidence Range',
+                showlegend=True,
+                hovertemplate='Range: ₹<b>%{y:.2f}</b>/kg<extra></extra>'
+            ))
+            
+            # Enhanced layout for forecast
+            fig_forecast.update_layout(
+                title=dict(
+                    text=f'<b>{crop_type} - 7 Day Price Forecast</b>',
+                    font=dict(size=16, color='#2C3E50'),
+                    x=0.5
+                ),
+                xaxis=dict(
+                    title='<b>Date</b>',
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor='rgba(128,128,128,0.2)',
+                    tickformat='%d %b',
+                    tickfont=dict(size=11)
+                ),
+                yaxis=dict(
+                    title='<b>Predicted Price (₹/kg)</b>',
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor='rgba(128,128,128,0.2)',
+                    tickformat='.2f',
+                    tickfont=dict(size=11)
+                ),
+                height=400,
+                showlegend=True,
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="center",
+                    x=0.5,
+                    bgcolor="rgba(255,255,255,0.8)"
+                ),
+                plot_bgcolor='rgba(248,249,250,0.8)',
+                paper_bgcolor='white',
+                margin=dict(t=80, l=60, r=40, b=60),
+                font=dict(family="Arial, sans-serif")
             )
-            fig_forecast.update_layout(height=300)
-            st.plotly_chart(fig_forecast, width="stretch")
+            
+            st.plotly_chart(fig_forecast, use_container_width=True)
+            
+            # Forecast insights
+            if len(predictions) > 1:
+                forecast_change = ((predictions['Predicted_Price'].iloc[-1] - predictions['Predicted_Price'].iloc[0]) / predictions['Predicted_Price'].iloc[0]) * 100
+                best_price_day = predictions.loc[predictions['Predicted_Price'].idxmax()]
+                
+                st.markdown("**🎯 Forecast Insights:**")
+                col_insight1, col_insight2 = st.columns(2)
+                with col_insight1:
+                    change_color = "normal" if abs(forecast_change) < 5 else "inverse"
+                    st.metric("📊 Expected Change", f"{forecast_change:+.1f}%", 
+                             delta_color=change_color, help="7-day price change prediction")
+                with col_insight2:
+                    st.metric("📅 Best Day to Sell", 
+                             best_price_day['Date'].strftime("%d %b"), 
+                             f"₹{best_price_day['Predicted_Price']:.2f}/kg",
+                             help="Day with highest predicted price")
         else:
-            st.info("Forecast data not available")
+            st.info("🔮 Price forecast data is not available for this crop")
     
     # Market analysis and recommendations
     if market_analysis['status'] == 'success':
