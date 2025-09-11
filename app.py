@@ -222,12 +222,8 @@ with tab1:
     
         if current_weather and daily_forecast and hourly_forecast:
             # Current conditions section with enhanced location info
-            if auto_detect_location and 'detected_location' in st.session_state:
-                st.header(f"🏠 Current Conditions - {location_name}")
-                st.caption(f"📍 Coordinates: {latitude:.4f}°, {longitude:.4f}°")
-            else:
-                st.header(f"🏠 Current Conditions - {location_name}")
-                st.caption(f"📍 Location: {latitude:.4f}°, {longitude:.4f}°")
+            st.header(f"🏠 Current Conditions - {location_name}")
+            st.caption(f"📍 Coordinates: {latitude:.4f}°, {longitude:.4f}°")
         
             col1, col2, col3, col4 = st.columns(4)
         
