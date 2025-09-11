@@ -259,41 +259,41 @@ with tab1:
             fig_precip.update_layout(height=300)
             st.plotly_chart(fig_precip, width="stretch")
         
-            # 7-day forecast
-            st.header("📅 7-Day Forecast")
-            forecast_data = []
-            for day in daily_forecast:
-                date = datetime.fromisoformat(day['date'])
-                forecast_data.append({
-                    'Date': date.strftime('%m/%d'),
-                    'Day': date.strftime('%A'),
-                    'High': f"{day['temp_max']:.0f}°C",
-                    'Low': f"{day['temp_min']:.0f}°C",
-                    'Precipitation': f"{day['precipitation']:.1f}mm",
-                    'Humidity': f"{day['humidity']:.0f}%",
-                    'Wind': f"{day['wind_speed']:.0f} km/h"
-                })
-            
-            forecast_df = pd.DataFrame(forecast_data)
-            st.dataframe(forecast_df, width="stretch", hide_index=True)
-            
-            # Growing conditions summary
-            st.header("🌱 Growing Conditions Summary")
-            conditions = crop_recommendations.analyze_growing_conditions(crop_type, current_weather, daily_forecast)
-            
-            condition_col1, condition_col2, condition_col3 = st.columns(3)
-            
-            with condition_col1:
-                st.metric("Overall Conditions", conditions['overall'], conditions['overall_trend'])
-            
-            with condition_col2:
-                st.metric("Temperature Suitability", conditions['temperature'])
-            
-            with condition_col3:
-                st.metric("Moisture Levels", conditions['moisture'])
+        # 7-day forecast
+        st.header("📅 7-Day Forecast")
+        forecast_data = []
+        for day in daily_forecast:
+            date = datetime.fromisoformat(day['date'])
+            forecast_data.append({
+                'Date': date.strftime('%m/%d'),
+                'Day': date.strftime('%A'),
+                'High': f"{day['temp_max']:.0f}°C",
+                'Low': f"{day['temp_min']:.0f}°C",
+                'Precipitation': f"{day['precipitation']:.1f}mm",
+                'Humidity': f"{day['humidity']:.0f}%",
+                'Wind': f"{day['wind_speed']:.0f} km/h"
+            })
         
-        else:
-            st.error("Failed to fetch weather data. Please check your internet connection and try again.")
+        forecast_df = pd.DataFrame(forecast_data)
+        st.dataframe(forecast_df, width="stretch", hide_index=True)
+        
+        # Growing conditions summary
+        st.header("🌱 Growing Conditions Summary")
+        conditions = crop_recommendations.analyze_growing_conditions(crop_type, current_weather, daily_forecast)
+        
+        condition_col1, condition_col2, condition_col3 = st.columns(3)
+        
+        with condition_col1:
+            st.metric("Overall Conditions", conditions['overall'], conditions['overall_trend'])
+        
+        with condition_col2:
+            st.metric("Temperature Suitability", conditions['temperature'])
+        
+        with condition_col3:
+            st.metric("Moisture Levels", conditions['moisture'])
+    
+    else:
+        st.error("Failed to fetch weather data. Please check your internet connection and try again.")
     
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
