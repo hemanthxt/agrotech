@@ -228,3 +228,79 @@ class WeatherService:
         except Exception as e:
             st.warning(f"Could not detect location name: {str(e)}")
             return f"Farm Location ({latitude:.2f}, {longitude:.2f})"
+    
+    @st.cache_data(ttl=3600)
+    def search_locations(_self, query: str) -> List[Dict]:
+        """Search for locations using geocoding API"""
+        if not query or len(query) < 2:
+            return []
+        
+        try:
+            # Use OpenStreetMap Nominatim for location search
+            url = "https://nominatim.openstreetmap.org/search"
+            params = {
+                "q": query,
+                "format": "json",
+                "limit": 8,
+                "addressdetails": 1,
+                "extratags": 1
+            }
+            
+            headers = {
+                'User-Agent': 'Agricultural-Assistant/1.0'
+            }
+            
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            locations = []
+            for item in data:
+                # Extract relevant information
+                display_name = item.get('display_name', '')
+                lat = float(item.get('lat', 0))
+                lon = float(item.get('lon', 0))
+                
+                # Build clean location name
+                address = item.get('address', {})
+                city = address.get('city', address.get('town', address.get('village', '')))
+                state = address.get('state', address.get('region', ''))
+                country = address.get('country', '')
+                
+                # Create a clean, readable location name
+                location_parts = []
+                if city:
+                    location_parts.append(city)
+                if state and state != city:
+                    location_parts.append(state)
+                if country and len(location_parts) < 2:
+                    location_parts.append(country)
+                
+                clean_name = ", ".join(location_parts[:3]) if location_parts else display_name
+                
+                locations.append({
+                    'name': clean_name,
+                    'display_name': display_name,
+                    'latitude': lat,
+                    'longitude': lon,
+                    'address': address
+                })
+            
+            return locations
+            
+        except Exception as e:
+            st.warning(f"Location search failed: {str(e)}")
+            return []
+    
+    @st.cache_data(ttl=3600)
+    def get_coordinates_from_location(_self, location_name: str) -> Optional[Dict]:
+        """Get coordinates from location name"""
+        locations = _self.search_locations(location_name)
+        if locations:
+            return {
+                'latitude': locations[0]['latitude'],
+                'longitude': locations[0]['longitude'],
+                'name': locations[0]['name'],
+                'display_name': locations[0]['display_name']
+            }
+        return None

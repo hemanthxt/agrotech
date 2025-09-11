@@ -34,88 +34,137 @@ st.title("🌾 Agricultural Assistant")
 st.markdown("Complete farming solution with weather monitoring and price predictions")
 
 # Sidebar for location input (shared across all tabs)
-st.sidebar.header("Farm Location")
+st.sidebar.header("🌍 Farm Location")
 
-# Enhanced current location detection
-st.sidebar.subheader("📍 Location Settings")
+# Location input methods
+location_method = st.sidebar.radio(
+    "How would you like to set your location?",
+    ["🔍 Search by Place Name", "🌐 Auto-Detect Current Location", "📍 Enter Coordinates Manually"],
+    index=0
+)
 
-# Get current location button with better styling
-if st.sidebar.button("🌍 Detect My Current Location", help="Automatically detect your current location using IP geolocation", type="primary"):
-    with st.spinner("🔍 Detecting your current location..."):
-        try:
-            # Use IP-based geolocation to detect current location
-            response = requests.get("https://ipapi.co/json/", timeout=10)
-            if response.status_code == 200:
-                location_data = response.json()
-                current_lat = float(location_data.get('latitude', 0))
-                current_lon = float(location_data.get('longitude', 0))
-                current_city = location_data.get('city', '')
-                current_region = location_data.get('region', '')
-                current_country = location_data.get('country_name', '')
+# Initialize session state variables
+if 'selected_latitude' not in st.session_state:
+    st.session_state.selected_latitude = 28.6139  # Default to New Delhi
+if 'selected_longitude' not in st.session_state:
+    st.session_state.selected_longitude = 77.2090
+if 'selected_location_name' not in st.session_state:
+    st.session_state.selected_location_name = "New Delhi, Delhi, India"
+
+# Method 1: Search by Place Name
+if location_method == "🔍 Search by Place Name":
+    st.sidebar.subheader("🔍 Search for Your Location")
+    
+    # Location search input
+    search_query = st.sidebar.text_input(
+        "Type a place name",
+        placeholder="e.g., Mumbai, Maharashtra, India",
+        help="Start typing to search for cities, towns, or regions"
+    )
+    
+    if search_query and len(search_query) >= 2:
+        with st.spinner("🔍 Searching locations..."):
+            search_results = weather_service.search_locations(search_query)
+            
+            if search_results:
+                st.sidebar.success(f"✅ Found {len(search_results)} locations")
                 
-                # Update session state with current location
-                st.session_state.current_latitude = current_lat
-                st.session_state.current_longitude = current_lon
-                if current_city and current_region:
-                    st.session_state.current_location_name = f"{current_city}, {current_region}, {current_country}"
-                elif current_city:
-                    st.session_state.current_location_name = f"{current_city}, {current_country}"
-                else:
-                    st.session_state.current_location_name = f"{current_country}" if current_country else "Your Location"
-                st.session_state.detected_location = st.session_state.current_location_name
+                # Display search results as selectbox
+                location_options = [f"{loc['name']} ({loc['latitude']:.4f}, {loc['longitude']:.4f})" for loc in search_results]
+                selected_idx = st.sidebar.selectbox(
+                    "Select your location:",
+                    range(len(location_options)),
+                    format_func=lambda x: location_options[x],
+                    help="Choose the most accurate match for your location"
+                )
                 
-                st.sidebar.success(f"✅ Location detected successfully!")
-                st.sidebar.info(f"📍 **{st.session_state.current_location_name}**\n🗺️ {current_lat:.4f}°, {current_lon:.4f}°")
-                st.rerun()
+                if st.sidebar.button("📍 Use This Location", type="primary"):
+                    selected_location = search_results[selected_idx]
+                    st.session_state.selected_latitude = selected_location['latitude']
+                    st.session_state.selected_longitude = selected_location['longitude'] 
+                    st.session_state.selected_location_name = selected_location['name']
+                    st.sidebar.success(f"✅ Location set to: **{selected_location['name']}**")
+                    st.rerun()
             else:
-                st.sidebar.error("❌ Could not detect location. Please enter coordinates manually.")
-        except Exception as e:
-            st.sidebar.error(f"❌ Location detection failed: {str(e)}")
-            st.sidebar.info("💡 Please enter your coordinates manually below.")
+                st.sidebar.warning("❌ No locations found. Try a different search term.")
 
-# Use detected location or default values
-default_lat = st.session_state.get('current_latitude', 40.7128)
-default_lon = st.session_state.get('current_longitude', -74.0060)
+# Method 2: Auto-detect current location  
+elif location_method == "🌐 Auto-Detect Current Location":
+    st.sidebar.subheader("🌐 Auto-Detect Location")
+    
+    if st.sidebar.button("🌍 Detect My Current Location", type="primary", help="Uses IP geolocation to find your location"):
+        with st.spinner("🔍 Detecting your current location..."):
+            try:
+                response = requests.get("https://ipapi.co/json/", timeout=10)
+                if response.status_code == 200:
+                    location_data = response.json()
+                    detected_lat = float(location_data.get('latitude', 0))
+                    detected_lon = float(location_data.get('longitude', 0))
+                    detected_city = location_data.get('city', '')
+                    detected_region = location_data.get('region', '')
+                    detected_country = location_data.get('country_name', '')
+                    
+                    # Build location name
+                    if detected_city and detected_region:
+                        detected_name = f"{detected_city}, {detected_region}, {detected_country}"
+                    elif detected_city:
+                        detected_name = f"{detected_city}, {detected_country}"
+                    else:
+                        detected_name = f"{detected_country}" if detected_country else "Your Location"
+                    
+                    # Update session state
+                    st.session_state.selected_latitude = detected_lat
+                    st.session_state.selected_longitude = detected_lon
+                    st.session_state.selected_location_name = detected_name
+                    
+                    st.sidebar.success(f"✅ Location detected successfully!")
+                    st.sidebar.info(f"📍 **{detected_name}**\n🗺️ {detected_lat:.4f}°, {detected_lon:.4f}°")
+                    st.rerun()
+                else:
+                    st.sidebar.error("❌ Could not detect location automatically.")
+            except Exception as e:
+                st.sidebar.error(f"❌ Location detection failed: {str(e)}")
 
-col1, col2 = st.sidebar.columns(2)
-with col1:
-    latitude = st.number_input("Latitude", value=default_lat, format="%.4f", help="Enter your farm's latitude")
-with col2:
-    longitude = st.number_input("Longitude", value=default_lon, format="%.4f", help="Enter your farm's longitude")
-
-# Auto-detect location name
-default_location_name = st.session_state.get('current_location_name', 'My Farm')
-
-col1_loc, col2_loc = st.sidebar.columns([3, 1])
-with col1_loc:
-    location_name = st.text_input("Location Name", value=default_location_name, help="Location name for your farm")
-with col2_loc:
-    st.write("") # Empty space for alignment
-    if st.button("📍", help="Auto-detect location name from coordinates"):
-        with st.spinner("Detecting location..."):
-            detected_name = weather_service.get_location_name(latitude, longitude)
+# Method 3: Enter coordinates manually
+elif location_method == "📍 Enter Coordinates Manually":
+    st.sidebar.subheader("📍 Manual Coordinates")
+    
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        manual_lat = st.number_input(
+            "Latitude", 
+            value=st.session_state.selected_latitude, 
+            format="%.4f", 
+            help="Enter latitude (-90 to 90)"
+        )
+    with col2:
+        manual_lon = st.number_input(
+            "Longitude", 
+            value=st.session_state.selected_longitude, 
+            format="%.4f", 
+            help="Enter longitude (-180 to 180)"
+        )
+    
+    if st.sidebar.button("🔍 Get Location Name", help="Find the place name for these coordinates"):
+        with st.spinner("🔍 Finding location name..."):
+            detected_name = weather_service.get_location_name(manual_lat, manual_lon)
             if detected_name:
-                st.session_state.detected_location = detected_name
+                st.session_state.selected_latitude = manual_lat
+                st.session_state.selected_longitude = manual_lon
+                st.session_state.selected_location_name = detected_name
+                st.sidebar.success(f"✅ Location identified: **{detected_name}**")
                 st.rerun()
 
-# Use detected location if available
-if 'detected_location' in st.session_state and st.session_state.detected_location:
-    location_name = st.session_state.detected_location
+# Display current selected location
+st.sidebar.markdown("---")
+st.sidebar.subheader("📍 Current Location")
+st.sidebar.success(f"**{st.session_state.selected_location_name}**")
+st.sidebar.info(f"🗺️ **Coordinates:** {st.session_state.selected_latitude:.4f}°, {st.session_state.selected_longitude:.4f}°")
 
-# Auto-detect location option
-auto_detect_location = st.sidebar.checkbox("Auto-detect location name", value=True, help="Automatically detect location name from coordinates")
-
-# Automatically detect location if option is enabled and coordinates change
-if auto_detect_location:
-    # Create a unique key based on coordinates to detect changes
-    coord_key = f"{latitude:.4f},{longitude:.4f}"
-    if 'last_coordinates' not in st.session_state or st.session_state.last_coordinates != coord_key:
-        st.session_state.last_coordinates = coord_key
-        with st.spinner("Detecting location..."):
-            detected_name = weather_service.get_location_name(latitude, longitude)
-            if detected_name:
-                st.session_state.detected_location = detected_name
-                location_name = detected_name
+# Set final coordinates for use in the app
+latitude = st.session_state.selected_latitude
+longitude = st.session_state.selected_longitude
+location_name = st.session_state.selected_location_name
 
 # Crop selection with categories
 st.sidebar.header("Crop Information")
