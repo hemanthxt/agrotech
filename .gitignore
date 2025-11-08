@@ -1,0 +1,25 @@
+# Git ignore file
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+bin/
+.buildozer/
+*.swp
+*.swo
+*~
+.DS_Store
+.vscode/
+.idea/
+*.log
+.env
+venv/
+env/
+ENV/
+*.backup
